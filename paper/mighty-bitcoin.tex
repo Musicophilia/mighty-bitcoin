@@ -1,20 +1,27 @@
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
 \usepackage{enumitem}
 
 \newcommand*{\Attack}{A}
 \newcommand*{\Time}{T}
 \newcommand*{\ABtcOrig}{{B_0}}
-\newcommand*{\NumAsics}{{N_{\mathrm{ASIC}}}}
 \newcommand*{\ABtcEarned}{{B_{\mathrm{E}}}}
 \newcommand*{\ABtcStolen}{{B_{\mathrm{S}}}}
 \newcommand*{\ABtcTotal}{{B_{\mathrm{T}}}}
-\newcommand*{\ExchgRate}{{V_{\mathrm{BTC}}}}
+%\newcommand*{\NumBtc}{{N_{\mathrm{BTC}}}}
+\newcommand*{\BtcValue}{{V_{\mathrm{BTC}}}}
 \newcommand*{\AsicValue}{{V_{\mathrm{ASIC}}}}
 \newcommand*{\TimeCashOut}{{T_{\mathrm{Cash}}}}
 \newcommand*{\TimeSellAsics}{{T_{\mathrm{Sell}}}}
 \newcommand*{\Utility}{U}
 \newcommand*{\AttackUtility}{{U_{\mathrm{Attack}}}}
+\newcommand*{\PayoffBtc}{{P_{\mathrm{BTC}}}}
+\newcommand*{\PayoffAsic}{{P_{\mathrm{ASIC}}}}
+
+\newenvironment{defs}
+  { \begin{enumerate}[labelindent=0pt,labelwidth=2.5in,itemindent=0em,align=parleft,leftmargin=!] }
+  { \end{enumerate} }
 
 \title{Mighty Bitcoin}
 \author{Karen Wang, Brandon Azad, Lisa Wang, Nishith Khandwala}
@@ -28,91 +35,102 @@
 
 Assumptions:
 \begin{enumerate}
-	\item
-		Future utility is discounted according to a discount rate $\gamma$.
-	\item
-		The mining power of the Bitcoin network is divided among a fixed number
-		$\NumAsics$ of equally powerful ASICs. That is, each ASIC controls a fixed
-		portion $1/\NumAsics$ of the total Bitcoin mining power.
-	\item
-		Every miner assigns the same price (in USD) to an ASIC. This price is
-		determined solely by the BTC-USD exchange rate and the discount factor.
-		More precisely, each miner values an ASIC depending on how long, at the
-		current BTC-USD exchange rate, it would take for the ASIC to pay for
-		itself. We intend to guess this valuation function based on real world
-		prices for Bitcoin ASICs.
-	\item
-		If the attacker attacks, then the rest of the Bitcoin network will
-		immediately detect the attack and know the number of bitcoin ``stolen''
-		(that is, the number of bitcoin that were awarded to the attacker by virtue
-		of the attack).
-	\item
-		The attacker already has $\ABtcOrig$ fraction of the total BTC
-		before the attack.
-	\item
-		The attacker already has a fraction $\alpha$ of the total mining power
-		before the attack, and so the attacker has already purchased $\alpha \cdot
-		\NumAsics$ ASICs.
-	\item
-		The attacker gets value only in USD, not BTC. Thus, after the attack, the
-		attacker will sell the ASICs and BTC to gain value in USD.
+  \item
+    Future utility is discounted according to a discount rate $\gamma$.
+  \item
+    The mining power of the Bitcoin network is divided among a fixed set of
+    ASICs. ASICs are neither added nor destroyed, just sold between miners.
+    Thus, the total mining power of the Bitcoin network remains constant for
+    the duration of the model.
+  \item
+    Every miner assigns the same price (in USD) to a given ASIC. This price is
+    determined solely by the ASIC's power, the BTC-USD exchange rate, and the
+    discount factor.
+    More precisely, each miner values an ASIC depending on how long, at the
+    current BTC-USD exchange rate, it would take for the ASIC to pay for
+    itself. We intend to guess this valuation function based on real world
+    prices for Bitcoin ASICs.
+  \item
+    If the attacker attacks, then the rest of the Bitcoin network will
+    immediately detect the attack and know the number of bitcoin ``stolen''
+    (that is, the number of bitcoin that were awarded to the attacker by virtue
+    of the attack).
+  \item
+    The attacker already has a fraction $\ABtcOrig$ of the total BTC
+    before the attack.
+  \item
+    The attacker already has a fraction $\alpha > 0$ of the total mining power
+    before the attack.
+  \item
+    The attacker gets value only in USD, not BTC. Thus, after the attack, the
+    attacker will sell the ASICs and BTC to gain value in USD.
 \end{enumerate}
 
 Define the following independent variables:
 
-\begin{enumerate}[labelindent=0pt,labelwidth=2in,itemindent=0em,align=parleft,leftmargin=!]
-	\item[{$\alpha \in (0, \frac{1}{2})$}]
-		The mining power of the attacker.
-	\item[{$\Attack \in \{0, 1\}$}]
-		Whether or not the attacker attacks.
-	\item[{$\gamma \in (0, 1]$}]
-		The discount rate per time step.
-	\item[{$\Time \in [0, \infty)$}]
-		The current time step.
-	\item[{$\ABtcOrig \in [0, 1]$}]
-		The fraction of all bitcoin owned by the attacker before $T = 0$.
-	\item[$\NumAsics$]
-		The total number of bitcoin mining machines.
-\end{enumerate}
+\begin{defs}
+  \item[{$\alpha \in (0, \frac{1}{2})$}]
+    The mining power of the attacker.
+  \item[{$\Attack \in \{0, 1\}$}]
+    Whether or not the attacker attacks.
+  \item[{$\gamma \in (0, 1]$}]
+    The discount rate per time step.
+  \item[{$\Time \in [0, \infty)$}]
+    The current time step.
+  \item[{$\ABtcOrig \in [0, 1]$}]
+    The fraction of all bitcoin owned by the attacker before $T = 0$.
+%  \item[{$\NumBtc$}]
+%    The total number of bitcoin in existence.
+\end{defs}
 
-Then the following parameters:
+Then the following model parameters and definitions:
 
-\begin{enumerate}[labelindent=0pt,labelwidth=2in,itemindent=0em,align=parleft,leftmargin=!]
-	\item[{$\ABtcEarned(\Attack, \alpha) \in [0, 1 - B_0]$}]
-		The fraction of all bitcoin stolen by the attacker (if Attack = 1) or
-		earned by the attacker (if Attack = 0) after TimeStep 0.
-	\item[{$\ABtcStolen(\Attack, \alpha) = \Attack \cdot \ABtcEarned(\Attack, \alpha)$}]
-		The fraction of all Bitcoin stolen by the attacker.
-	\item[{$\ABtcTotal(\Attack, \alpha) = \ABtcOrig + \ABtcEarned(\Attack, \alpha)$}]
-		The total fraction of all bitcoin controlled by the attacker after TimeStep
-		0.
-	\item[{$\ExchgRate(\ABtcStolen(\Attack, \alpha), \Time) \in [0, \infty]$}]
-		The value of a bitcoin in USD after the given number of time steps from the
-		attack.
-	\item[{$\AsicValue(\ExchgRate(\ldots), \gamma)$}]
-		TODO
-\end{enumerate}
+\begin{defs}
+  \item[{$\ABtcEarned(\Attack, \alpha) \in [0, 1 - B_0]$}]
+    The fraction of all bitcoin stolen by the attacker (if Attack = 1) or
+    earned by the attacker (if Attack = 0) at $T = 0$.
+  \item[{$\ABtcStolen(\Attack, \alpha)
+      = \Attack \cdot \ABtcEarned$}]
+    The fraction of all bitcoin stolen by the attacker.
+  \item[{$\ABtcTotal(\Attack, \alpha)
+      = \ABtcOrig + \ABtcEarned$}]
+    The total fraction of all bitcoin controlled by the attacker at $T = 0$.
+  \item[{$\BtcValue(\ABtcStolen, \Time) \in [0, \infty)$}]
+    The total value of all bitcoin in USD after the given number of time steps
+    from the attack.
+  \item[{$\AsicValue(\BtcValue, \gamma) \in [0, \infty)$}]
+    The total value of all Bitcoin mining ASICs in USD. A collection of ASICs
+    with mining power $\alpha$ will have value $\alpha \cdot
+    \AsicValue$.
+    We assume that the value of the Bitcoin ASICs is a function only of the
+    BTC-USD exchange rate and the discount factor $\gamma$.
+  \item[{$\PayoffBtc(\Attack, \alpha, \TimeCashOut)
+      = \ABtcTotal \cdot \BtcValue$}]
+    The payout for the attacker of cashing in their bitcoin at time $\TimeCashOut$.
+  \item[{$\PayoffAsic(\Attack, \alpha, \gamma, \TimeSellAsics)
+      = \alpha \cdot \AsicValue$}]
+    The payout for the attacker of selling their ASICs at time $\TimeSellAsics$.
+\end{defs}
 
 Suppose the attacker attacks at $\Time = 0$, cashes out from BTC to USD at
 $\Time = \TimeCashOut$, and sells the ASICs at time $\Time = \TimeSellAsics$.
 We define the utility for the attacker as a function $\Utility(\Attack)$:
 
 \[
-	\Utility(\Attack) =
-	\max_{\TimeCashOut, \TimeSellAsics}
-		\left[
-			(\ABtcTotal(\Attack, \alpha) \cdot \ExchgRate(\ABtcStolen, \TimeCashOut))
-				\cdot \gamma^\TimeCashOut
-			+
-			(\alpha \cdot \NumAsics \cdot \AsicValue(\ExchgRate(\ABtcStolen, \TimeSellAsics), \gamma))
-				\cdot \gamma^\TimeSellAsics
-		\right]
+  \Utility(\Attack) =
+  \max_{\TimeCashOut, \TimeSellAsics}
+    \left[
+        \PayoffBtc(\Attack, \alpha, \TimeCashOut)
+          \cdot \gamma^\TimeCashOut
+        + \PayoffAsic(\Attack, \alpha, \gamma, \TimeSellAsics)
+          \cdot \gamma^\TimeSellAsics
+    \right]
 \]
 
 We define the utility of attacking over mining as:
 
 \[
-	\AttackUtility = \Utility(1) - \Utility(0)
+  \AttackUtility = \Utility(1) - \Utility(0)
 \]
 
 We assume that the attacker will attack if and only if $\AttackUtility$ is
