@@ -9,8 +9,9 @@
 \newcommand*{\ABtcEarned}{{B_{\mathrm{E}}}}
 \newcommand*{\ABtcStolen}{{B_{\mathrm{S}}}}
 \newcommand*{\ABtcTotal}{{B_{\mathrm{T}}}}
-%\newcommand*{\NumBtc}{{N_{\mathrm{BTC}}}}
-\newcommand*{\BtcValue}{{V_{\mathrm{BTC}}}}
+\newcommand*{\NumBtc}{{N_{\mathrm{BTC}}}}
+\newcommand*{\BlkReward}{{R}}
+\newcommand*{\ExchgRate}{{V_{\mathrm{BTC}}}}
 \newcommand*{\AsicValue}{{V_{\mathrm{ASIC}}}}
 \newcommand*{\TimeCashOut}{{T_{\mathrm{Cash}}}}
 \newcommand*{\TimeSellAsics}{{T_{\mathrm{Sell}}}}
@@ -64,6 +65,40 @@ Assumptions:
   \item
     The attacker gets value only in USD, not BTC. Thus, after the attack, the
     attacker will sell the ASICs and BTC to gain value in USD.
+  \item
+    The attacker can spend any earned rewards immediately. That is, we ignore
+    the fact that coinbase transactions are locked until they have 100
+    confirmations.
+  \item
+    There are a total of $\NumBtc$ bitcoin in existence, and the current rate
+    of mining does not change this value significantly. Thus, we assume that
+    the total number of bitcoin is constant.
+\end{enumerate}
+
+Data points:
+
+\begin{enumerate}
+  \item
+    % http://www.coindesk.com/dao-attacked-code-issue-leads-60-million-ether-theft/
+    % https://bitcoinmagazine.com/articles/ethereum-s-dao-forking-crisis-the-bitcoin-perspective-1467404395
+    % https://en.wikipedia.org/wiki/The_DAO_(organization)
+    % https://www.cryptocoinsnews.com/ex-ethereum-developer-dao-hack-happened-comes-next/
+    % https://www.worldcoinindex.com/coin/ethereum
+    The Ethereum DAO hack stole about $4\%$ of all ether, and the exchange rate
+    almost immediately dropped by almost $50\%$.
+    This attack is not directly comparable since it is a hack rather than a
+    mining attack.
+  \item
+    % http://www.coinwarz.com/calculators/bitcoin-mining-calculator/?h=14000.00&p=1350.00&pc=0.25&pf=0.20&d=199312067531.24300000&r=12.50000000&er=577.18000000&hc=2100.00
+    % ROI: 187 days (coinwarz)
+    AntMiner S5: 1.155 Th/s: \$150
+  \item
+    % ROI: 122 days (coinwarz)
+    AntMiner S7: 4.73 Th/s: \$400
+  \item
+    % ROI: just above 1 year (https://www.hobbymining.com/bitmain-antminer-s9/)
+    % ROI: 233 days (coinwarz)
+    AntMiner S9: 13 Th/s: \$2100
 \end{enumerate}
 
 Define the following independent variables:
@@ -79,8 +114,8 @@ Define the following independent variables:
     The current time step.
   \item[{$\ABtcOrig \in [0, 1]$}]
     The fraction of all bitcoin owned by the attacker before $T = 0$.
-%  \item[{$\NumBtc$}]
-%    The total number of bitcoin in existence.
+  \item[{$\NumBtc$}]
+    The total number of bitcoin in existence.
 \end{defs}
 
 Then the following model parameters and definitions:
@@ -88,24 +123,25 @@ Then the following model parameters and definitions:
 \begin{defs}
   \item[{$\ABtcEarned(\Attack, \alpha) \in [0, 1 - B_0]$}]
     The fraction of all bitcoin stolen by the attacker (if Attack = 1) or
-    earned by the attacker (if Attack = 0) at $T = 0$.
+    earned by the attacker (if Attack = 0) at $\Time = 0$.
   \item[{$\ABtcStolen(\Attack, \alpha)
       = \Attack \cdot \ABtcEarned$}]
     The fraction of all bitcoin stolen by the attacker.
   \item[{$\ABtcTotal(\Attack, \alpha)
       = \ABtcOrig + \ABtcEarned$}]
-    The total fraction of all bitcoin controlled by the attacker at $T = 0$.
-  \item[{$\BtcValue(\ABtcStolen, \Time) \in [0, \infty)$}]
-    The total value of all bitcoin in USD after the given number of time steps
-    from the attack.
-  \item[{$\AsicValue(\BtcValue, \gamma) \in [0, \infty)$}]
+    The total fraction of all bitcoin controlled by the attacker at $\Time = 0$.
+  \item[{$\ExchgRate(\ABtcStolen, \Time) \in [0, \infty)$}]
+    The BTC-USD exchange rate. More precisely, the value of one bitcoin in US
+    dollars at time $\Time$ given that the fraction $\ABtcStolen$ of all
+    bitcoin was stolen at time $\Time = 0$.
+  \item[{$\AsicValue(\ExchgRate, \gamma) \in [0, \infty)$}]
     The total value of all Bitcoin mining ASICs in USD. A collection of ASICs
     with mining power $\alpha$ will have value $\alpha \cdot
     \AsicValue$.
     We assume that the value of the Bitcoin ASICs is a function only of the
     BTC-USD exchange rate and the discount factor $\gamma$.
   \item[{$\PayoffBtc(\Attack, \alpha, \TimeCashOut)
-      = \ABtcTotal \cdot \BtcValue$}]
+      = \ABtcTotal \cdot \NumBtc \cdot \ExchgRate$}]
     The payout for the attacker of cashing in their bitcoin at time $\TimeCashOut$.
   \item[{$\PayoffAsic(\Attack, \alpha, \gamma, \TimeSellAsics)
       = \alpha \cdot \AsicValue$}]
@@ -114,7 +150,8 @@ Then the following model parameters and definitions:
 
 Suppose the attacker attacks at $\Time = 0$, cashes out from BTC to USD at
 $\Time = \TimeCashOut$, and sells the ASICs at time $\Time = \TimeSellAsics$.
-We define the utility for the attacker as a function $\Utility(\Attack)$:
+We define the discounted utility for the attacker as a function
+$\Utility(\Attack)$:
 
 \[
   \Utility(\Attack) =
