@@ -3,54 +3,61 @@ import math
 
 from model_utils import *
 ########################################################################################################################
-def get_attack_value(btc_stolen=5, total_btc=16000000, attack_time=0, withdraw_btc_delta=1,
-                     sell_machines_delta=2, mining_power=0.1, discount_rate=1.0,
-                     btc_owned_before_attack=10, global_num_machines=10):
-    btc_owned_post_attack = btc_stolen + btc_owned_before_attack
-    fraction_of_btc_stolen = btc_stolen / total_btc;
-    btc_to_usd_withdraw = btc_to_usd_exchange_rate(attack_time + withdraw_btc_delta,
-                                                   fraction_of_btc_stolen)
-    btc_value_post_attack = btc_owned_post_attack * btc_to_usd_withdraw * \
-                            math.pow(discount_rate, withdraw_btc_delta)
-
-    sell_machines_time = attack_time + sell_machines_delta
-    btc_to_usd_machine = btc_to_usd_exchange_rate(sell_machines_time,
-                                                  fraction_of_btc_stolen)
-    asic_price = mining_asic_sell_price(mining_power, fraction_of_btc_stolen, sell_machines_time,
-                                        discount_rate)
-    machine_sell_price_post_attack = asic_price * discount_rate ** sell_machines_delta
-
-    attack_value = btc_value_post_attack + machine_sell_price_post_attack
-    return attack_value
-
-def get_no_attack_value(btc_owned=10, sell_time=0, mining_power=0.1, global_num_machines=10,
-                        discount_rate=1.0):
-    btc_to_usd = btc_to_usd_exchange_rate(sell_time, 0)
-    btc_value = btc_owned * btc_to_usd
 
 
-    asic_price = mining_asic_sell_price(mining_power, 0, sell_time, discount_rate)
+class utility_model(object):
+    def __init__(self, btc_f_stolen = 5, btc_f_owned_0 =10, total_btc = 16000000, attack_time = 0, withdraw_btc_delta = 1,
+        sell_machines_delta = 2, mining_power = 0.1, discount_rate = 1.0, global_num_machines = 10):
+        self.btc_f_stolen = btc_f_stolen
+        self.btc_f_owned_0 = btc_f_owned_0
+        self.total_btc = total_btc
+        self.attack_time = attack_time
+        self.withdraw_btc_delta = withdraw_btc_delta
+        self.sell_machines_delta = sell_machines_delta
+        self.mining_power = mining_power
+        self.discount_rate = discount_rate
+        self.global_num_machines = global_num_machines
 
-    no_attack_value = btc_value + asic_price
-    return no_attack_value
+    def _get_attack_value(self):
+        btc_owned_post_attack = (self.btc_f_stolen + self.btc_f_owned_0) * self.total_btc
+        btc_to_usd_withdraw = btc_to_usd_exchange_rate(self.attack_time + self.withdraw_btc_delta,
+                                                       self.btc_f_stolen)
+        btc_value_post_attack = btc_owned_post_attack * btc_to_usd_withdraw * \
+                                math.pow(self.discount_rate, self.withdraw_btc_delta)
 
-def attack_utility(btc_stolen=5, total_btc=16000000, attack_time=0, withdraw_btc_delta=1,
-                   sell_machines_delta=2, mining_power=0.1, discount_rate=1.0,
-                   btc_owned_before_attack=10, global_num_machines=10):
-    attack_value = get_attack_value(btc_stolen, total_btc, attack_time, withdraw_btc_delta,
-                                    sell_machines_delta, mining_power, discount_rate,
-                                    btc_owned_before_attack, global_num_machines)
+        sell_machines_time = self.attack_time + self.sell_machines_delta
+        asic_price = mining_asic_sell_price(self.mining_power, self.btc_f_stolen, sell_machines_time,
+                                            self.discount_rate)
+        machine_sell_price_post_attack = asic_price * math.pow(self.discount_rate, self.sell_machines_delta)
 
-    # comparing value of selling btc and machine at same time as attack
-    sell_time = attack_time
-    btc_owned = btc_owned_before_attack
-    no_attack_value = get_no_attack_value(btc_owned, sell_time, mining_power, global_num_machines,
-                                          discount_rate)
+        attack_value = btc_value_post_attack + machine_sell_price_post_attack
+        return attack_value
 
-    utility = attack_value - no_attack_value
-    return utility
+    def _get_no_attack_value(self):
+        btc_to_usd = btc_to_usd_exchange_rate(time=0, fraction_of_btc_stolen=0.0)
+        btc_value = (self.btc_f_owned_0 * self.total_btc) * btc_to_usd
 
-if __name__ == '__main__':
-    print attack_utility()
+        asic_price = mining_asic_sell_price(mining_power=self.mining_power, fraction_of_btc_stolen=0.0,
+                                            sell_machines_time=0, discount_rate=self.discount_rate)
 
+        no_attack_value = btc_value + asic_price
+        return no_attack_value
+
+
+    def compute_attack_utility(self):
+        attack_value = self._get_attack_value()
+        no_attack_value = self._get_no_attack_value()
+
+        utility = attack_value - no_attack_value
+        return utility
+
+def get_attack_utility():
+    attack_utility_model = utility_model(btc_f_stolen = 5, btc_f_owned_0 =10, total_btc = 16000000, attack_time = 0,
+                                         withdraw_btc_delta = 1, sell_machines_delta = 2, mining_power = 0.1,
+                                         discount_rate = 1.0, global_num_machines = 10)
+    return attack_utility_model.compute_attack_utility()
+
+if __name__ == "__main__":
+    attack_utility = get_attack_utility()
+    print attack_utility
 
