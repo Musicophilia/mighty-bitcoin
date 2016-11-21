@@ -20,6 +20,8 @@
 \newcommand*{\PayoffBtc}{{P_{\mathrm{BTC}}}}
 \newcommand*{\PayoffAsic}{{P_{\mathrm{ASIC}}}}
 
+\newcommand*{\E}[1]{\mathrm{E}\left[#1\right]}
+
 \newenvironment{defs}
   { \begin{enumerate}[labelindent=0pt,labelwidth=2.5in,itemindent=0em,align=parleft,leftmargin=!] }
   { \end{enumerate} }
@@ -51,6 +53,19 @@ Assumptions:
     current BTC-USD exchange rate, it would take for the ASIC to pay for
     itself. We intend to guess this valuation function based on real world
     prices for Bitcoin ASICs.
+  \item
+    Every miner values an ASIC with mining power $\alpha$ according to the
+    expected number of USD the ASIC will earn the miner after $L$ days, assuming:
+    \begin{enumerate}
+      \item
+        a block is mined every 10 minues;
+      \item
+        the ASIC earns the miner a share $\alpha$ of the block reward;
+      \item
+        future utility is discounted by a factor of $\gamma$; and
+      \item
+        the BTC-USD exchange rate remains constant.
+    \end{enumerate}
   \item
     If the attacker attacks, then the rest of the Bitcoin network will
     immediately detect the attack and know the number of bitcoin ``stolen''
@@ -111,7 +126,7 @@ Define the following independent variables:
   \item[{$\gamma \in (0, 1]$}]
     The discount rate per time step.
   \item[{$\Time \in [0, \infty)$}]
-    The current time step.
+    The current day.
   \item[{$\ABtcOrig \in [0, 1]$}]
     The fraction of all bitcoin owned by the attacker before $T = 0$.
   \item[{$\NumBtc$}]
@@ -134,19 +149,23 @@ Then the following model parameters and definitions:
     The BTC-USD exchange rate. More precisely, the value of one bitcoin in US
     dollars at time $\Time$ given that the fraction $\ABtcStolen$ of all
     bitcoin was stolen at time $\Time = 0$.
-  \item[{$\AsicValue(\ExchgRate, \gamma) \in [0, \infty)$}]
-    The total value of all Bitcoin mining ASICs in USD. A collection of ASICs
-    with mining power $\alpha$ will have value $\alpha \cdot
-    \AsicValue$.
-    We assume that the value of the Bitcoin ASICs is a function only of the
-    BTC-USD exchange rate and the discount factor $\gamma$.
+  \item[{$\AsicValue(\alpha, \ExchgRate, \gamma) \in [0, \infty)$}]
+    The value in USD of a collection of Bitcoin mining ASICs with mining power $\alpha$.
   \item[{$\PayoffBtc(\Attack, \alpha, \TimeCashOut)
       = \ABtcTotal \cdot \NumBtc \cdot \ExchgRate$}]
     The payout for the attacker of cashing in their bitcoin at time $\TimeCashOut$.
   \item[{$\PayoffAsic(\Attack, \alpha, \gamma, \TimeSellAsics)
-      = \alpha \cdot \AsicValue$}]
+      = \AsicValue$}]
     The payout for the attacker of selling their ASICs at time $\TimeSellAsics$.
 \end{defs}
+
+Under the assumptions stated above, we can calculate the expected payoff of a mining ASIC:
+\begin{align*}
+  \AsicValue(\alpha, \ExchgRate, \gamma)
+  & = \E{\sum_{\Time=0}^L \alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \gamma^\Time} \\
+  & = \E{\alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \frac{\gamma^{L+1} - 1}{\gamma - 1}} \\
+  & = \alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \frac{\gamma^{L+1} - 1}{\gamma - 1}.
+\end{align*}
 
 Suppose the attacker attacks at $\Time = 0$, cashes out from BTC to USD at
 $\Time = \TimeCashOut$, and sells the ASICs at time $\Time = \TimeSellAsics$.
