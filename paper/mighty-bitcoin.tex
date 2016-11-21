@@ -163,8 +163,8 @@ Under the assumptions stated above, we can calculate the expected payoff of a mi
 \begin{align*}
   \AsicValue(\alpha, \ExchgRate, \gamma)
   & = \E{\sum_{\Time=0}^L \alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \gamma^\Time} \\
-  & = \E{\alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \frac{\gamma^{L+1} - 1}{\gamma - 1}} \\
-  & = \alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \frac{\gamma^{L+1} - 1}{\gamma - 1}.
+  & = \E{\alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \frac{1 - \gamma^{L+1}}{1 - \gamma}} \\
+  & = \alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \frac{1 - \gamma^{L+1}}{1 - \gamma}.
 \end{align*}
 
 Suppose the attacker attacks at $\Time = 0$, cashes out from BTC to USD at
