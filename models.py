@@ -6,8 +6,10 @@ from model_utils import *
 
 
 class utility_model(object):
-    def __init__(self, btc_f_stolen = 5, btc_f_owned_0 =10, total_btc = 16000000, attack_time = 0, withdraw_btc_delta = 1,
-        sell_machines_delta = 2, mining_power = 0.1, discount_rate = 1.0, global_num_machines = 10):
+    def __init__(self, btc_f_stolen = 0.05, btc_f_owned_0 = 0.10, total_btc = 16000000,
+            attack_time = 0, withdraw_btc_delta = 1, sell_machines_delta = 2,
+            mining_power = 0.2, discount_rate = 1.0, global_num_machines = 10):
+        assert 0 <= btc_f_stolen + btc_f_owned_0 < 1
         self.btc_f_stolen = btc_f_stolen
         self.btc_f_owned_0 = btc_f_owned_0
         self.total_btc = total_btc
@@ -52,10 +54,10 @@ class utility_model(object):
         return utility
 
 def get_attack_utility():
-    attack_utility_model = utility_model(btc_f_stolen = 5, btc_f_owned_0 =10, total_btc = 16000000, attack_time = 0,
-                                         withdraw_btc_delta = 1, sell_machines_delta = 2, mining_power = 0.1,
-                                         discount_rate = 1.0, global_num_machines = 10)
-    return attack_utility_model.compute_attack_utility()
+    model = utility_model(btc_f_stolen = 0.05, btc_f_owned_0 = 0.10, total_btc = 16000000,
+            attack_time = 0, withdraw_btc_delta = 1, sell_machines_delta = 2,
+            mining_power = 0.2, discount_rate = 1.0, global_num_machines = 10)
+    return model.compute_attack_utility()
 
 if __name__ == "__main__":
     attack_utility = get_attack_utility()
