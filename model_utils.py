@@ -5,6 +5,8 @@ import math
 blocks_per_period = 144
 asic_recuperation_period = 250
 block_reward = 12.5
+rate_multiplier = 1.0 # constant factor multiplied to decrease rate.
+recovery_cap_multiplier = 1.0 # float between [0, 1]
 
 def btc_to_usd_exchange_rate(time, fraction_of_btc_stolen):
     # Attack time, if applicable, is 0
@@ -20,11 +22,10 @@ def btc_to_usd_exchange_rate(time, fraction_of_btc_stolen):
     if fraction_of_btc_stolen == 0.0:
         return default_btc_to_usd_rate # assume rate is constant
     else:
-        # Crude assumption: rate decreases by (k * fraction_of_btc_stolen) %.
-        k = 1.0 # constant factor multiplied to decrease rate.
-        lower_bound_rate = (1.0 - k*fraction_of_btc_stolen) * default_btc_to_usd_rate
+        # Crude assumption: rate decreases by (rate_multiplier * fraction_of_btc_stolen) %.
+        lower_bound_rate = (1.0 - rate_multiplier*fraction_of_btc_stolen) * default_btc_to_usd_rate
         # Crude assumption: rate can __fully__ recover.
-        upper_bound_rate = 1.0 * default_btc_to_usd_rate
+        upper_bound_rate = recovery_cap_multiplier * default_btc_to_usd_rate
         # Since attack time = 0, any time post attack is positive.
         # And so, second derivative of rate is negative.
         # This ranges from 0 to 1.
