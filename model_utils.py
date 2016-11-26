@@ -20,14 +20,18 @@ def btc_to_usd_exchange_rate(time, fraction_of_btc_stolen):
     if fraction_of_btc_stolen == 0.0:
         return default_btc_to_usd_rate # assume rate is constant
     else:
-        # Crude assumption: rate decreases by fraction_of_btc_stolen %.
-        lower_bound_rate = (1.0 - fraction_of_btc_stolen) * default_btc_to_usd_rate
+        # Crude assumption: rate decreases by (k * fraction_of_btc_stolen) %.
+        k = 1.0 # constant factor multiplied to decrease rate.
+        lower_bound_rate = (1.0 - k*fraction_of_btc_stolen) * default_btc_to_usd_rate
         # Crude assumption: rate can __fully__ recover.
         upper_bound_rate = 1.0 * default_btc_to_usd_rate
         # Since attack time = 0, any time post attack is positive.
         # And so, second derivative of rate is negative.
         # This ranges from 0 to 1.
-        delta_rate = math.tanh(time) * (upper_bound_rate - lower_bound_rate)
+        # Modifying tanh to account for fraction_of_btc_stolen.
+        # The higher the fraction_of_btc_stolen, the longer it takes to recover.
+        tanh = math.tanh((1 - fraction_of_btc_stolen) * time)
+        delta_rate = tanh * (upper_bound_rate - lower_bound_rate)
         new_btc_to_usd = lower_bound_rate + delta_rate
         return new_btc_to_usd
 
