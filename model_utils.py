@@ -5,8 +5,15 @@ import math
 blocks_per_period = 144
 asic_recuperation_period = 240
 block_reward = 12.5
-rate_multiplier = 1.0 # constant factor multiplied to decrease rate.
 recovery_cap_multiplier = 1.0 # float between [0, 1]
+default_btc_to_usd_rate = 730 # current bitcoin rate
+
+def compute_lower_bound(btc_f_stolen):
+    percent_stolen = btc_f_stolen*100
+    # 2-degree polynomial fit to data (4%, 60%), (0.75%, 80%)
+    percent_new_worth = -1.531*math.pow(percent_stolen, 2) + 1.116*percent_stolen + 80.02
+    lower_bound = max((percent_new_worth/100.0) * default_btc_to_usd_rate, 0.0)
+    return lower_bound
 
 def btc_to_usd_exchange_rate(time, btc_f_stolen):
     # Attack time, if applicable, is 0
@@ -18,12 +25,11 @@ def btc_to_usd_exchange_rate(time, btc_f_stolen):
     # | /
     # |/
     # notice the free fall and then tanh(>=0)
-    default_btc_to_usd_rate = 730 # current bitcoin rate
     if btc_f_stolen == 0.0:
         return default_btc_to_usd_rate # assume rate is constant
     else:
-        # Crude assumption: rate decreases by (rate_multiplier * btc_f_stolen) %.
-        lower_bound_rate = (1.0 - rate_multiplier*btc_f_stolen) * default_btc_to_usd_rate
+        # Crude assumption: rate decreases according to polynomial fit to Brandon's data.
+        lower_bound_rate = compute_lower_bound(btc_f_stolen)
         # Crude assumption: rate can __fully__ recover.
         upper_bound_rate = recovery_cap_multiplier * default_btc_to_usd_rate
         # Since attack time = 0, any time post attack is positive.
