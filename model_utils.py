@@ -10,8 +10,9 @@ default_btc_to_usd_rate = 730 # current bitcoin rate
 
 def compute_lower_bound(btc_f_stolen):
     percent_stolen = btc_f_stolen*100
-    # 2-degree polynomial fit to data (4%, 60%), (0.75%, 80%)
-    percent_new_worth = -1.531*math.pow(percent_stolen, 2) + 1.116*percent_stolen + 80.02
+    # 2-degree polynomial fit to data:
+    # (4%, 60%), (0.75%, 80%) and dummy data points (0%, 100%), (7.6%, 0%)
+    percent_new_worth = -0.843*math.pow(percent_stolen, 2) + -5.807*percent_stolen + 93.59
     lower_bound = max((percent_new_worth/100.0) * default_btc_to_usd_rate, 0.0)
     return lower_bound
 
