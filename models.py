@@ -34,10 +34,10 @@ class utility_model(object):
         return attack_value
 
     def _get_no_attack_value(self):
-        btc_to_usd = btc_to_usd_exchange_rate(time=0, fraction_of_btc_stolen=0.0)
+        btc_to_usd = btc_to_usd_exchange_rate(time=0, btc_f_stolen=0.0)
         btc_value = (self.btc_f_owned_0 * self.total_btc) * btc_to_usd
 
-        asic_price = mining_asic_sell_price(mining_power=self.mining_power, fraction_of_btc_stolen=0.0,
+        asic_price = mining_asic_sell_price(mining_power=self.mining_power, btc_f_stolen=0.0,
                                             sell_machines_time=0, discount_rate=self.discount_rate)
 
         no_attack_value = btc_value + asic_price
