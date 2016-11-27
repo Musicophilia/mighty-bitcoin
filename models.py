@@ -9,7 +9,7 @@ class utility_model(object):
     def __init__(self, btc_f_stolen = 0.05, btc_f_owned_0 = 0.10, total_btc = 16000000,
             attack_time = 0, withdraw_btc_delta = 1, sell_machines_delta = 2,
             mining_power = 0.2, discount_rate = 1.0, global_num_machines = 10):
-        assert 0 <= btc_f_stolen + btc_f_owned_0 < 1
+        assert 0 <= btc_f_stolen + btc_f_owned_0 < 1        
         self.btc_f_stolen = btc_f_stolen
         self.btc_f_owned_0 = btc_f_owned_0
         self.total_btc = total_btc
