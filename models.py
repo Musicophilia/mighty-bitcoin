@@ -8,7 +8,7 @@ from model_utils import *
 class utility_model(object):
     def __init__(self, btc_f_stolen = 0.05, btc_f_owned_0 = 0.10, total_btc = 16000000,
             attack_time = 0, withdraw_btc_delta = 1, sell_machines_delta = 2,
-            mining_power = 0.2, discount_rate = 1.0, global_num_machines = 10):
+            mining_power = 0.2, discount_rate = 1.0):
         assert 0 <= btc_f_stolen + btc_f_owned_0 < 1        
         self.btc_f_stolen = btc_f_stolen
         self.btc_f_owned_0 = btc_f_owned_0
@@ -18,7 +18,6 @@ class utility_model(object):
         self.sell_machines_delta = sell_machines_delta
         self.mining_power = mining_power
         self.discount_rate = discount_rate
-        self.global_num_machines = global_num_machines
 
     def _get_attack_value(self):
         btc_owned_post_attack = (self.btc_f_stolen + self.btc_f_owned_0) * self.total_btc
@@ -56,7 +55,7 @@ class utility_model(object):
 def get_attack_utility():
     model = utility_model(btc_f_stolen = 0.05, btc_f_owned_0 = 0.10, total_btc = 16000000,
             attack_time = 0, withdraw_btc_delta = 1, sell_machines_delta = 2,
-            mining_power = 0.2, discount_rate = 1.0, global_num_machines = 10)
+            mining_power = 0.2, discount_rate = 1.0)
     return model.compute_attack_utility()
 
 if __name__ == "__main__":
