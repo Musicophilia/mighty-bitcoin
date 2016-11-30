@@ -5,9 +5,9 @@ from models import *
 btc_f_stolen = 0.005
 btc_f_owned_0 = 0.01
 mining_power = 0.1
-discount_rate = 0.3
+discount_rate = 0.99
 
-num_days = 300
+num_days = 30
 
 def run_optimizer():
     attack_utility_list = []
@@ -20,7 +20,9 @@ def run_optimizer():
                                 discount_rate=discount_rate,
                                 withdraw_btc_delta=withdraw_btc_delta,
                                 sell_machines_delta=sell_machines_delta)
-        attack_utility_list.append(model_t.compute_attack_utility())
+        attack_utility = model_t.compute_attack_utility()
+        print "Attack utility at t = %d: %f" % (t, attack_utility)
+        attack_utility_list.append(attack_utility)
     plt.plot(range(num_days), attack_utility_list)
     plt.xlabel('Withdraw Time Delta After Attack (in Days)')
     plt.ylabel('Attack Utility')
