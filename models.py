@@ -51,9 +51,9 @@ class utility_model(object):
         utility = attack_value - no_attack_value
         return utility
 
-def get_attack_utility(btc_f_stolen = 0.05, btc_f_owned_0 = 0.10, total_btc = 16000000,
-            attack_time = 0, withdraw_btc_delta = 1, sell_machines_delta = 2,
-            mining_power = 0.2, discount_rate = 1.0):
+def get_attack_utility(btc_f_stolen = 0.05, btc_f_owned_0 = 0.10, mining_power = 0.2,
+                       discount_rate = 1.0, withdraw_btc_delta = 0, sell_machines_delta = 0,
+                       attack_time = 0, total_btc = 16000000):
     model = utility_model(btc_f_stolen = btc_f_stolen, btc_f_owned_0 = btc_f_owned_0,
             total_btc = total_btc, attack_time = attack_time, withdraw_btc_delta = withdraw_btc_delta,
             sell_machines_delta = sell_machines_delta, mining_power = mining_power,
