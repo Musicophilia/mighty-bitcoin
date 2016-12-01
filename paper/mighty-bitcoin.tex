@@ -13,12 +13,13 @@
 \newcommand*{\BlkReward}{{R}}
 \newcommand*{\ExchgRate}{{V_{\mathrm{BTC}}}}
 \newcommand*{\AsicValue}{{V_{\mathrm{ASIC}}}}
-\newcommand*{\TimeCashOut}{{T_{\mathrm{Cash}}}}
-\newcommand*{\TimeSellAsics}{{T_{\mathrm{Sell}}}}
+\newcommand*{\TimeCashOut}{{T_{\mathrm{SellBTC}}}}
+\newcommand*{\TimeSellAsics}{{T_{\mathrm{SellASIC}}}}
 \newcommand*{\Utility}{U}
 \newcommand*{\AttackUtility}{{U_{\mathrm{Attack}}}}
 \newcommand*{\PayoffBtc}{{P_{\mathrm{BTC}}}}
 \newcommand*{\PayoffAsic}{{P_{\mathrm{ASIC}}}}
+\newcommand*{\BlocksPerPeriod}{{N_{\mathrm{B}}}}
 
 \newcommand*{\E}[1]{\mathrm{E}\left[#1\right]}
 
@@ -38,6 +39,8 @@
 
 Assumptions:
 \begin{enumerate}
+  \item
+    We are focusing on mining attacks, not exploits/software bugs that allow the attacker to steal BTC.
   \item
     Future utility is discounted according to a discount rate $\gamma$.
   \item
@@ -64,7 +67,7 @@ Assumptions:
       \item
         future utility is discounted by a factor of $\gamma$; and
       \item
-        the BTC-USD exchange rate remains constant.
+        the BTC-USD exchange rate does not change after the time of sale.
     \end{enumerate}
   \item
     If the attacker attacks, then the rest of the Bitcoin network will
@@ -88,9 +91,11 @@ Assumptions:
     There are a total of $\NumBtc$ bitcoin in existence, and the current rate
     of mining does not change this value significantly. Thus, we assume that
     the total number of bitcoin is constant.
+  \item
+    The attack starts at time $\Time = 0$, the attacker sells their BTC at time $\TimeCashOut$, and the attacker sells their ASICs at time $\TimeSellAsics$.
 \end{enumerate}
 
-Data points:
+Data points. Unfortunately, none of these are mining attacks.
 
 \begin{enumerate}
   \item
@@ -103,6 +108,13 @@ Data points:
     almost immediately dropped by almost $50\%$.
     This attack is not directly comparable since it is a hack rather than a
     mining attack.
+%  \item
+%    On February 24, 2014, an internal document was allegedly leaked showing that Mt.\ Gox had lost $744\,408$ BTC due to theft. Mt.\ Gox closed the next day. The BTC exchange rate dropped from about \$600 to about \$500 over the 24th and 25th, then recovered to \$570 by the 26th. On March 3rd, the price spiked to \$650.
+    % http://www.coindesk.com/price/#2014-02-19,2014-02-27,close,bpi,USD
+    % http://www.ibtimes.co.uk/mtgox-lost-barely-386-bitcoins-due-cyber-attacks-not-850000-1442242
+  \item
+    % https://www.theguardian.com/technology/2016/aug/03/bitcoin-stolen-bitfinex-exchange-hong-kong
+    On August 3, 2016, the Bitcoin exchange Bitfinex had $120\,000$ BTC stolen, about $0.75\%$ of all Bitcoin in circulation. The value of BTC immediately plunged from \$600 to \$520, then recovered to \$590 by August 7.
   \item
     % http://www.coinwarz.com/calculators/bitcoin-mining-calculator/?h=14000.00&p=1350.00&pc=0.25&pf=0.20&d=199312067531.24300000&r=12.50000000&er=577.18000000&hc=2100.00
     % ROI: 187 days (coinwarz)
@@ -124,9 +136,11 @@ Define the following independent variables:
   \item[{$\Attack \in \{0, 1\}$}]
     Whether or not the attacker attacks.
   \item[{$\gamma \in (0, 1]$}]
-    The discount rate per time step.
+    The discount rate per time period.
   \item[{$\Time \in [0, \infty)$}]
-    The current day.
+    The current time period.
+  \item[{$\BlocksPerPeriod$}]
+    The average number of blocks per time period. If one time period is a day, then $\BlocksPerPeriod = 144$.
   \item[{$\ABtcOrig \in [0, 1]$}]
     The fraction of all bitcoin owned by the attacker before $T = 0$.
   \item[{$\NumBtc$}]
@@ -159,12 +173,17 @@ Then the following model parameters and definitions:
     The payout for the attacker of selling their ASICs at time $\TimeSellAsics$.
 \end{defs}
 
-Under the assumptions stated above, we can calculate the expected payoff of a mining ASIC:
+% TODO: Explain this more.
+Under the assumptions stated above, we can calculate the expected payoff of a mining ASIC as follows:
+On average, there will be $\BlocksPerPeriod$ blocks per period.
+If the attacker earns a fraction $\alpha$ of each block, and each block has a reward $\BlkReward$ bitcoin,
+then the attacker earns $\BlocksPerPeriod \cdot \alpha \cdot \BlkReward$ bitcoin
+per period on expectation.
 \begin{align*}
   \AsicValue(\alpha, \ExchgRate, \gamma)
-  & = \E{\sum_{\Time=0}^L \alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \gamma^\Time} \\
-  & = \E{\alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \frac{1 - \gamma^{L+1}}{1 - \gamma}} \\
-  & = \alpha \cdot \BlkReward \cdot 144 \cdot \ExchgRate \cdot \frac{1 - \gamma^{L+1}}{1 - \gamma}.
+  & = \E{\sum_{\Time=0}^{L-1} \BlocksPerPeriod \cdot \alpha \cdot \BlkReward \cdot \ExchgRate \cdot \gamma^\Time} \\
+  & = \E{\BlocksPerPeriod \cdot \alpha \cdot \BlkReward \cdot \ExchgRate \cdot \frac{1 - \gamma^L}{1 - \gamma}} \\
+  & = \BlocksPerPeriod \cdot \alpha \cdot \BlkReward \cdot \ExchgRate \cdot \frac{1 - \gamma^L}{1 - \gamma}.
 \end{align*}
 
 Suppose the attacker attacks at $\Time = 0$, cashes out from BTC to USD at
