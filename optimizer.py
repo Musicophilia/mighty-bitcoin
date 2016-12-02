@@ -7,12 +7,13 @@ default_btc_f_owned_0 = 0
 default_mining_power  = 0.2
 default_discount_rate = 0.9995
 
-num_days = 30
+default_num_days = 30
 
 def optimal_attack_utility(btc_f_stolen = default_btc_f_stolen,
                            btc_f_owned_0 = default_btc_f_owned_0,
                            mining_power = default_mining_power,
                            discount_rate = default_discount_rate,
+                           num_days = default_num_days,
                            plot = False):
     attack_utility_list = []
     for t in xrange(num_days):
@@ -34,10 +35,10 @@ def optimal_attack_utility(btc_f_stolen = default_btc_f_stolen,
         plt.show()
     max_attack_utility = max(attack_utility_list)
     optimal_withdraw_time = attack_utility_list.index(max_attack_utility)
-    return max_attack_utility, optimal_withdraw_time
+    return max_attack_utility, optimal_withdraw_time, attack_utility_list
 
 if __name__ == '__main__':
-    max_attack_utility, optimal_withdraw_time = optimal_attack_utility(plot=True)
+    max_attack_utility, optimal_withdraw_time, _ = optimal_attack_utility(plot=True)
     print "Max utility possible:", max_attack_utility
     print "Optimal time to withdraw BTC after attack:", optimal_withdraw_time
 
