@@ -8,12 +8,14 @@ default_mining_power  = 0.2
 default_discount_rate = 0.9995
 
 default_num_days = 30
+default_exchange_rate = 730
 
 def optimal_attack_utility(btc_f_stolen = default_btc_f_stolen,
                            btc_f_owned_0 = default_btc_f_owned_0,
                            mining_power = default_mining_power,
                            discount_rate = default_discount_rate,
                            num_days = default_num_days,
+                           default_exchange_rate = default_exchange_rate,
                            plot = False):
     attack_utility_list = []
     for t in xrange(num_days):
@@ -24,7 +26,8 @@ def optimal_attack_utility(btc_f_stolen = default_btc_f_stolen,
                                             mining_power=mining_power,
                                             discount_rate=discount_rate,
                                             withdraw_btc_delta=withdraw_btc_delta,
-                                            sell_machines_delta=sell_machines_delta)
+                                            sell_machines_delta=sell_machines_delta,
+                                            default_exchange_rate=default_exchange_rate)
         if plot:
             print "Attack utility at t = %d: %f" % (t, attack_utility)
         attack_utility_list.append(attack_utility)
