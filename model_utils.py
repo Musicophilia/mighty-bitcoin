@@ -4,10 +4,10 @@ import math
 import matplotlib.pyplot as plt
 
 blocks_per_period = 144
-asic_recuperation_period = 240
+asic_recuperation_period = 270
 block_reward = 12.5
 recovery_cap_multiplier = 1.0 # float between [0, 1]
-default_btc_to_usd_rate = 730 # current bitcoin rate
+default_btc_to_usd_rate = 772 # current bitcoin rate
 
 def compute_lower_bound(btc_f_stolen, default_exchange_rate):
     percent_stolen = btc_f_stolen*100
