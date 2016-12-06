@@ -1,12 +1,15 @@
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{amsmath}
-\usepackage{enumitem}
+% \usepackage{amsmath}
+% \usepackage{enumitem}
 
-\newcommand*{\Attack}{A}
+\usepackage{graphicx,fancyhdr,amsmath,amssymb,amsthm,subfig,url,hyperref, wrapfig, enumitem}
+\usepackage[margin=1in]{geometry}
+
+%\newcommand*{\Attack}{A}
 \newcommand*{\Time}{T}
 \newcommand*{\ABtcOrig}{{B_0}}
-\newcommand*{\ABtcEarned}{{B_{\mathrm{E}}}}
+%\newcommand*{\ABtcEarned}{{B_{\mathrm{E}}}}
 \newcommand*{\ABtcStolen}{{B_{\mathrm{S}}}}
 \newcommand*{\ABtcTotal}{{B_{\mathrm{T}}}}
 \newcommand*{\NumBtc}{{N_{\mathrm{BTC}}}}
@@ -21,13 +24,15 @@
 \newcommand*{\PayoffAsic}{{P_{\mathrm{ASIC}}}}
 \newcommand*{\BlocksPerPeriod}{{N_{\mathrm{B}}}}
 
+\newcommand*{\THs}{\ \mathrm{TH/s}}
+
 \newcommand*{\E}[1]{\mathrm{E}\left[#1\right]}
 
 \newenvironment{defs}
   { \begin{enumerate}[labelindent=0pt,labelwidth=2.5in,itemindent=0em,align=parleft,leftmargin=!] }
   { \end{enumerate} }
 
-\title{Mighty Bitcoin}
+\title{Mighty Bitcoin: To Attack Or Not To Attack?}
 \author{Karen Wang, Brandon Azad, Lisa Wang, Nishith Khandwala}
 \date{\today}
 
@@ -35,67 +40,256 @@
 
 \maketitle
 
-\section{Utility of Attacking}
+\section{Introduction}
 
-Assumptions:
+In class we saw several different attacks against Bitcoin where miners could increase their expected earnings by violating the default protocol. For instance, miners have an incentive to temporarily withhold blocks that they find so that the rest of the network mines on a block that will not be part of the longest chain, reducing the effective hash power of the rest of the Bitcoin network. This attack, known as selfish mining, is profitable to the miner if she controls a sufficiently large proportion of the total hash power.\cite{eyal2014majority}
+
+When Bitcoin was first introduced in 2008, only one mining attack was known: the 51\% attack, in which a miner with 51\% of the hash power could fork the blockchain back to an arbitrary depth.
+Despite the potential severity of such an attack,
+Satoshi Nakamoto, the pseudonymous inventor of Bitcoin, was not concerned.
+He argued that any potential attacker would be better off not attacking, since they can earn more real-world value by playing by the rules:
+\begin{quote}
+The incentive may help encourage nodes to stay honest. If a greedy attacker is able to assemble more CPU proof-of-worker than all the honest nodes, he would have to choose between using it to defraud people by stealing back his payments, or using it to generate new coins. He ought to find it more profitable to play by the rules, such rules that favour him with more new coins than everyone else combined, than to undermine the system and the validity of his own wealth.\cite{nakamoto2008bitcoin}
+\end{quote}
+
+Even after new types mining attacks were discovered, it was still generally believed that Nakamoto's argument held weight: no serious mining attacks against Bitcoin have ever been observed.\footnote{
+  The absence of observed mining attacks is not for a lack of profitable opportunity. In June of 2014, the GHash.IO mining pool briefly achieved 51\% of the total mining power. However, rather than risking the possibility of an attack, miners left the pool.\cite{ghashio51}
+  More recently, in April of 2016, a transaction with a 291 BTC fee, worth almost $\$137\,000$, was posted to the blockchain.\cite{291btcfee} Despite the large fee, there was no observed attempt to snipe the fee away from the original miner.
+} However, the question deserves further study: Is it true that the incentives of the Bitcoin system encourage miners to not attack because attacking would undermine the source of their wealth?
+Put another way, are mining attacks profitable if the attacker cares about their holdings in a standard currency like US dollars rather than bitcoin?
+
+To study the profitability of mining attacks in this setting, we have designed and implemented models to simulate the impact of an attack on the value of Bitcoin and evaluate the utility for the attacker.
+We have made several simplifying assumptions in order to allow the model to be efficiently described and computed.
+Under these assumptions, we evaluated an attacker's expected increase in profit in US dollars by attacking instead of mining cooperatively.
+
+Our experiments showed that for ...  (summarize conclusion / main takeaway)
+
+TODO(???)
+
+
+\section{Literature Review}
+
+TODO(Karen)
+
+\section{Model Description}
+
+In this section we will describe our assumptions and our model of the attacking miner's utility.
+As previously mentioned, we are focusing on mining attacks, not exploits/software bugs that allow the attacker to steal BTC.
+
+\subsection{Assumptions}\label{section:assumptions}
+
+In order to make calculating the utility of a mining attack feasible, we make several strong assumptions.
+Most of these assumptions do not hold up in practice.
+However, we expect that they are plausible enough to give a somewhat realistic model for how Bitcoin might be affected by an attack.
+
 \begin{enumerate}
   \item
-    We are focusing on mining attacks, not exploits/software bugs that allow the attacker to steal BTC.
+    Future utility is discounted according to a discount rate $\gamma$ per time period.
+    Thus, if each time period is a day, one dollar tomorrow is worth $\gamma$ dollars
+    today.
+
+    The discount rate actually serves 2 different purposes in our model.
+    First, because Bitcoin is highly volatile, the value of one Bitcoin in the future is very uncertain. Thus, the discount factor accomodates one's belief in Bitcoin as a store of value.
+    Second, because new and more powerful mining ASICs are introduced regularly, an ASIC is inherently more valuable now than in the future.
   \item
-    Future utility is discounted according to a discount rate $\gamma$.
+    The mining power of the Bitcoin network is divided among a fixed set of mining
+    ASICs. These ASICs are neither created nor destroyed, just sold between miners.
+    Thus, the total mining power of the Bitcoin network remains constant.
+
+    This assumption is of course false, but reasonably accurate over the short spans of time (about a month) we are considering.
+%   \item
+%     Every miner assigns the same price (in USD) to a given ASIC. This price is
+%     determined solely by the ASIC's power, the BTC-USD exchange rate, and the
+%     discount factor.
   \item
-    The mining power of the Bitcoin network is divided among a fixed set of
-    ASICs. ASICs are neither added nor destroyed, just sold between miners.
-    Thus, the total mining power of the Bitcoin network remains constant for
-    the duration of the model.
-  \item
-    Every miner assigns the same price (in USD) to a given ASIC. This price is
-    determined solely by the ASIC's power, the BTC-USD exchange rate, and the
-    discount factor.
-    More precisely, each miner values an ASIC depending on how long, at the
-    current BTC-USD exchange rate, it would take for the ASIC to pay for
-    itself. We intend to guess this valuation function based on real world
-    prices for Bitcoin ASICs.
-  \item
-    Every miner values an ASIC with mining power $\alpha$ according to the
-    expected number of USD the ASIC will earn the miner after $L$ days, assuming:
+    Every miner values an ASIC with mining power $\beta$ according to the
+    expected number of US dollars the ASIC will earn the miner after $L$ time periods,
+    assuming:
     \begin{enumerate}
       \item
-        a block is mined every 10 minues;
+        the reward for each block is the same known value;
       \item
-        the ASIC earns the miner a share $\alpha$ of the block reward;
+        blocks are discovered regularly;
+      \item
+        the ASIC earns the miner a share $\beta$ of the block reward;
       \item
         future utility is discounted by a factor of $\gamma$; and
       \item
         the BTC-USD exchange rate does not change after the time of sale.
     \end{enumerate}
+
+    We will use data on the prices of real ASICs to estimate the value $L$.
   \item
-    If the attacker attacks, then the rest of the Bitcoin network will
+    Only one miner will attack Bitcoin.
+  \item
+    The miner gets value only in US dollars, not bitcoin. Thus, after the attack, the
+    miner will sell the ASICs and bitcoin to gain value in US dollars.
+  \item
+    If the miner attacks, then the rest of the Bitcoin network will
     immediately detect the attack and know the number of bitcoin ``stolen''
-    (that is, the number of bitcoin that were awarded to the attacker by virtue
-    of the attack).
+    (that is, the number of bitcoin that were awarded to the attacker due to the attack).
   \item
-    The attacker already has a fraction $\ABtcOrig$ of the total BTC
+    The miner already has a fraction $\ABtcOrig$ of the total bitcoin
+    before the attack.
+
+    In practice the miner could just sell any bitcoin they own before attacking, causing $\ABtcOrig$ to be $0$. However, if the miner performs many transactions on the bitcoin network, some of those they interact with might prefer operating in bitcoin, which might prevent the miner from cashing out entirely.
+  \item
+    The miner already has a fraction $\alpha < \frac{1}{2}$ of the total mining power
     before the attack.
   \item
-    The attacker already has a fraction $\alpha > 0$ of the total mining power
-    before the attack.
-  \item
-    The attacker gets value only in USD, not BTC. Thus, after the attack, the
-    attacker will sell the ASICs and BTC to gain value in USD.
-  \item
-    The attacker can spend any earned rewards immediately. That is, we ignore
+    The miner can spend any earned rewards immediately. That is, we ignore
     the fact that coinbase transactions are locked until they have 100
     confirmations.
   \item
     There are a total of $\NumBtc$ bitcoin in existence, and the current rate
-    of mining does not change this value significantly. Thus, we assume that
-    the total number of bitcoin is constant.
+    of mining does not change this value significantly. That is, we assume that
+    the total number of bitcoin in existence is constant.
+
+    Again, this assumption is false, but reasonable over the short span of time we are considering.
   \item
-    The attack starts at time $\Time = 0$, the attacker sells their BTC at time $\TimeCashOut$, and the attacker sells their ASICs at time $\TimeSellAsics$.
+    The attack starts at time $\Time = 0$, the miner sells their BTC at time $\TimeCashOut$, and the attacker sells their ASICs at time $\TimeSellAsics$.
 \end{enumerate}
 
-Data points. Unfortunately, none of these are mining attacks.
+\subsection{Model Definition}
+
+We define the following independently tunable variables:
+
+\begin{defs}
+  \item[{$\alpha \in (0, \frac{1}{2})$}]
+    The mining power of the attacker.
+  \item[{$\gamma \in (0, 1]$}]
+    The discount rate per time period.
+  \item[{$\ABtcOrig \in [0, 1]$}]
+    The fraction of all bitcoins owned by the attacker before $T = 0$.
+  \item[{$\ABtcStolen
+      \in [0, 1 - B_0]$}]
+    The fraction of all bitcoins unfairly earned (i.e. ``stolen'') by the miner by attacking. If the miner does not attack, then $\ABtcStolen = 0$.
+\end{defs}
+
+We also define the following parameters, which are used in our model but which are not independent input variables:
+
+\begin{defs}
+  \item[{$\Time \in [0, \infty)$}]
+    The current time period.
+  \item[{$\BlocksPerPeriod$}]
+    The average number of blocks per time period. If one time period is a day, then $\BlocksPerPeriod \approx 144$.\cite{blksperday}\footnote{
+      Bitcoin was designed so that on expectation a block would be mined once every 10 minutes. However, due to natural random variation and bias towards smaller block times due to the slow adjustment of mining difficulty, the average number of blocks per day is often higher than the expected 144. Nonetheless, this effect is small enough not to be relevant for our investigation.
+    }
+  \item[{$\NumBtc$}]
+    The total number of bitcoins in circulation. Currently this is about $16\,000\,000$.\cite{btcincirc}
+  \item[{$L$}]
+    The mining recuperation period: how long an ASIC needs to run before it earns back its purchase price. We will estimate this value using real-world price data.
+  \item[{$\BlkReward$}]
+    The block reward in bitcoin. Currently this is 12.5 BTC.\cite{blkreward}
+\end{defs}
+
+Finally, we define the following dependent functions and values:
+
+\begin{defs}
+%  \item[{$\ABtcEarned(\Attack, \alpha) \in [0, 1 - B_0]$}]
+%    The fraction of all bitcoins stolen by the attacker (if Attack = 1) or
+%    earned by the attacker (if Attack = 0) at $\Time = 0$.
+  \item[{$\ABtcTotal
+      = \ABtcOrig + \ABtcStolen$}]
+    The total fraction of all bitcoins controlled by the attacker at $\Time = 0$.
+  \item[{$\ExchgRate(\ABtcStolen, \Time) \in [0, \infty)$}]
+    The BTC-USD exchange rate. More precisely, the value of one bitcoin in US
+    dollars at time $\Time$ given that the fraction $\ABtcStolen$ of all
+    bitcoins was stolen at time $\Time = 0$.
+  \item[{$\AsicValue(\beta, \gamma, \ExchgRate) \in [0, \infty)$}]
+    The value in USD of a collection of Bitcoin mining ASICs with mining power $\beta$.
+    An explicit formula based on the assumptions in Section \ref{section:assumptions} is given below.
+  \item[{$\PayoffBtc(\ABtcTotal, \ExchgRate)
+      = \ABtcTotal \cdot \NumBtc \cdot \ExchgRate$}]
+    The payout for the miner of cashing in their bitcoins at time $\TimeCashOut$.
+  \item[{$\PayoffAsic
+      = \AsicValue$}]
+    The payout for the miner of selling their ASICs at time $\TimeSellAsics$.
+\end{defs}
+
+Under the assumptions stated previously, we can calculate an explicit value for $\AsicValue$. Recall that we assume a miner values an ASIC with mining power $\beta$ according to the expected earnings in dollars after $L$ time periods of mining. % , given that:
+% \begin{enumerate}
+%     \item each block is worth $R$ bitcoin;
+% 	\item blocks are discovered regularly, at a rate of $\BlocksPerPeriod$ per period;
+%     \item the ASIC earns the miner a fraction $\beta$ of each block's reward;
+%     \item future utility is discounted $\gamma$ per time period; and
+%     \item the BTC-USD exchange rate remains fixed.
+% \end{enumerate}
+If there are $\BlocksPerPeriod$ blocks each time period, each block is worth $\BlkReward$ bitcoin, the ASIC earns the miner a fraction $\beta$ of each block reward, the value of one bitcoin is $\ExchgRate$, and future utility is discounted $\gamma$ per time period, then the expected earnings in US dollars of mining for $L$ time periods is
+\begin{align*}
+  \AsicValue(\beta, \gamma, \ExchgRate)
+  & =
+  \sum_{\Time=0}^{L-1} \BlocksPerPeriod \cdot \BlkReward \cdot \beta \cdot \ExchgRate \cdot \gamma^T.
+\end{align*}
+This simplifies to
+\begin{align*}
+  \AsicValue(\beta, \gamma, \ExchgRate)
+  = \begin{cases}
+  \displaystyle
+    \BlocksPerPeriod \cdot \BlkReward \cdot \beta \cdot \ExchgRate \cdot \frac{1 - \gamma^L}{1 - \gamma} & \text{if } \gamma < 1 \\
+  \displaystyle
+    \BlocksPerPeriod \cdot \BlkReward \cdot \beta \cdot \ExchgRate \cdot L & \text{if } \gamma = 1.
+  \end{cases}
+\end{align*}
+
+Finally, we define the utility function for the miner.
+Suppose the miner attacks at $\Time = 0$, cashes out from bitcoins to US dollars at
+$\Time = \TimeCashOut$, and sells their ASICs at time $\Time = \TimeSellAsics$.
+We define the utility for the miner $\Utility(\alpha, \gamma, \ABtcOrig, \ABtcStolen)$ as the maximum possible discounted earnings in US dollars over all possible values of $\TimeCashOut$ and $\TimeSellAsics$:
+\[
+  \Utility(\alpha, \gamma, \ABtcOrig, \ABtcStolen) =
+  \max_{\substack{\TimeCashOut,\\\TimeSellAsics}}
+    \left[
+      \begin{aligned}
+        & \hphantom{{}+{}}
+        \PayoffBtc(\ABtcOrig + \ABtcStolen, \ExchgRate(\ABtcStolen, \TimeCashOut))
+          \cdot \gamma^\TimeCashOut \\
+        & {}+ \PayoffAsic(\alpha, \gamma, \ExchgRate(\ABtcStolen, \TimeSellAsics))
+          \cdot \gamma^\TimeSellAsics
+       \end{aligned}
+    \right]
+\]
+Also, we define the utility of attacking over mining as:
+\[
+  \AttackUtility(\alpha, \gamma, \ABtcOrig, \ABtcStolen) = \Utility(\alpha, \gamma, \ABtcOrig, \ABtcStolen) - \Utility(\alpha, \gamma, \ABtcOrig, 0)
+\]
+The latter quantity is a measure of the expected profit if the miner attacks and is able to steal $\ABtcStolen$ instead of mining cooperatively.
+Thus, the miner has an incentive to attack if and only if $\AttackUtility$ is positive.
+
+\subsection{Fitting Real-World Data}
+
+In order to turn our abstract model into a concrete implementation, we used real-world data to derive values for the above parameters and variables.
+
+We chose each time period to be a day. The values $\BlocksPerPeriod = 144$, $\NumBtc \approx 16\,000\,000$, and $R = 12.5$ are public and depend only on Bitcoin.
+This leaves just $L$ and $\ExchgRate$ that have yet to be fully determined.
+
+\subsubsection{Computing ASIC Price Valuation}
+
+In order to estimate $L$, we looked at prices for mining hardware in Bitcoin articles and on eBay, then chose a value of $L$ that made our model for $\AsicValue$ yield the expected prices.
+Online, the price for an AntMiner S9 on eBay varies between \$2000 and \$2400, depending on the hashpower.
+A typical price for an S9 at $13 \THs$ (terahashes per second, a measure of hashing power in the Bitcoin community) is about \$2349.\cite{ebays9}
+
+As of December 1st, 2016, the Bitcoin network's total hash rate was $2\,052\,749 \THs$, and the price of one bitcoin was \$772.\cite{hashrate, btcprice}
+This means that the AntMiner S9 has a mining power of $\beta \approx \frac{13}{2.05\cdot 10^6} \approx 6.33 \cdot 10^{-6}$.
+At a discount rate of $\gamma = 0.9999$, this corresponds to $L \approx 271$:
+\begin{align*}
+  L & = \log_{\gamma} \left(
+    1 - \AsicValue \cdot \frac{1 - \gamma}{\BlocksPerPeriod \cdot \BlkReward \cdot \beta \cdot \ExchgRate}
+  \right) \\
+  & \approx \log_{0.9999} \left(
+    1 - 2349 \cdot \frac{1 - 0.9999}{144 \cdot 12.5 \cdot (6.33 \cdot 10^{-6}) \cdot 772}
+  \right) \\
+  & \approx 270.54.
+\end{align*}
+We checked whether this value was reasonable under the assumptions of our model by using an online Bitcoin mining profitability calculator called CoinWarz.
+The calculator predicted the value $L \approx 262.30$ days to break even.\cite{coinwarz, difficultychart}
+The proximity of these two values lends confidence to our choice of ASIC valuation function.
+Thus, for the computational model, we chose $L = 270$.
+
+\subsubsection{Computing the BTC to USD Exchange Rate}
+
+From the model description, it is evident that the exchange rate is one of the deciding factors
+TODO(Nish)
 
 \begin{enumerate}
   \item
@@ -115,100 +309,48 @@ Data points. Unfortunately, none of these are mining attacks.
   \item
     % https://www.theguardian.com/technology/2016/aug/03/bitcoin-stolen-bitfinex-exchange-hong-kong
     On August 3, 2016, the Bitcoin exchange Bitfinex had $120\,000$ BTC stolen, about $0.75\%$ of all Bitcoin in circulation. The value of BTC immediately plunged from \$600 to \$520, then recovered to \$590 by August 7.
+%   \item
+%     % http://www.coinwarz.com/calculators/bitcoin-mining-calculator/?h=14000.00&p=1350.00&pc=0.25&pf=0.20&d=199312067531.24300000&r=12.50000000&er=577.18000000&hc=2100.00
+%     % ROI: 187 days (coinwarz)
+%     AntMiner S5: 1.155 Th/s: \$150
+%   \item
+%     % ROI: 122 days (coinwarz)
+%     AntMiner S7: 4.73 Th/s: \$400
+%   \item
+%     % ROI: just above 1 year (https://www.hobbymining.com/bitmain-antminer-s9/)
+%     % ROI: 233 days (coinwarz)
+%     AntMiner S9: 13 Th/s: \$2100
   \item
-    % http://www.coinwarz.com/calculators/bitcoin-mining-calculator/?h=14000.00&p=1350.00&pc=0.25&pf=0.20&d=199312067531.24300000&r=12.50000000&er=577.18000000&hc=2100.00
-    % ROI: 187 days (coinwarz)
-    AntMiner S5: 1.155 Th/s: \$150
-  \item
-    % ROI: 122 days (coinwarz)
-    AntMiner S7: 4.73 Th/s: \$400
-  \item
-    % ROI: just above 1 year (https://www.hobbymining.com/bitmain-antminer-s9/)
-    % ROI: 233 days (coinwarz)
-    AntMiner S9: 13 Th/s: \$2100
+  TODO(Nish): Look at hacks posted in the slack that were used to get the data points used to fit the function.
 \end{enumerate}
 
-Define the following independent variables:
+\section{Experiments}
 
-\begin{defs}
-  \item[{$\alpha \in (0, \frac{1}{2})$}]
-    The mining power of the attacker.
-  \item[{$\Attack \in \{0, 1\}$}]
-    Whether or not the attacker attacks.
-  \item[{$\gamma \in (0, 1]$}]
-    The discount rate per time period.
-  \item[{$\Time \in [0, \infty)$}]
-    The current time period.
-  \item[{$\BlocksPerPeriod$}]
-    The average number of blocks per time period. If one time period is a day, then $\BlocksPerPeriod = 144$.
-  \item[{$\ABtcOrig \in [0, 1]$}]
-    The fraction of all bitcoin owned by the attacker before $T = 0$.
-  \item[{$\NumBtc$}]
-    The total number of bitcoin in existence.
-\end{defs}
+The primary goal of our project was to determine if and when carrying out a bitcoin mining attack would be profitable and so, using the model proposed in an earlier section, we investigated when the attacker's utility is guaranteed to be positive (or negative). We proposed the following experiment:
 
-Then the following model parameters and definitions:
+Perform a search over the space of model parameters and independent variables and look for maximum positive attacker utility over a set time period. Among the model parameters, we try different values of $B_T$ and among the independent variables, we search over different configurations of $B_0$, $\alpha$ and $\gamma$. In order to simulate possible real world attacks, we limit over search space to reasonably realistic values: $B_0$
 
-\begin{defs}
-  \item[{$\ABtcEarned(\Attack, \alpha) \in [0, 1 - B_0]$}]
-    The fraction of all bitcoin stolen by the attacker (if Attack = 1) or
-    earned by the attacker (if Attack = 0) at $\Time = 0$.
-  \item[{$\ABtcStolen(\Attack, \alpha)
-      = \Attack \cdot \ABtcEarned$}]
-    The fraction of all bitcoin stolen by the attacker.
-  \item[{$\ABtcTotal(\Attack, \alpha)
-      = \ABtcOrig + \ABtcEarned$}]
-    The total fraction of all bitcoin controlled by the attacker at $\Time = 0$.
-  \item[{$\ExchgRate(\ABtcStolen, \Time) \in [0, \infty)$}]
-    The BTC-USD exchange rate. More precisely, the value of one bitcoin in US
-    dollars at time $\Time$ given that the fraction $\ABtcStolen$ of all
-    bitcoin was stolen at time $\Time = 0$.
-  \item[{$\AsicValue(\alpha, \ExchgRate, \gamma) \in [0, \infty)$}]
-    The value in USD of a collection of Bitcoin mining ASICs with mining power $\alpha$.
-  \item[{$\PayoffBtc(\Attack, \alpha, \TimeCashOut)
-      = \ABtcTotal \cdot \NumBtc \cdot \ExchgRate$}]
-    The payout for the attacker of cashing in their bitcoin at time $\TimeCashOut$.
-  \item[{$\PayoffAsic(\Attack, \alpha, \gamma, \TimeSellAsics)
-      = \AsicValue$}]
-    The payout for the attacker of selling their ASICs at time $\TimeSellAsics$.
-\end{defs}
 
-% TODO: Explain this more.
-Under the assumptions stated above, we can calculate the expected payoff of a mining ASIC as follows:
-On average, there will be $\BlocksPerPeriod$ blocks per period.
-If the attacker earns a fraction $\alpha$ of each block, and each block has a reward $\BlkReward$ bitcoin,
-then the attacker earns $\BlocksPerPeriod \cdot \alpha \cdot \BlkReward$ bitcoin
-per period on expectation.
-\begin{align*}
-  \AsicValue(\alpha, \ExchgRate, \gamma)
-  & = \E{\sum_{\Time=0}^{L-1} \BlocksPerPeriod \cdot \alpha \cdot \BlkReward \cdot \ExchgRate \cdot \gamma^\Time} \\
-  & = \E{\BlocksPerPeriod \cdot \alpha \cdot \BlkReward \cdot \ExchgRate \cdot \frac{1 - \gamma^L}{1 - \gamma}} \\
-  & = \BlocksPerPeriod \cdot \alpha \cdot \BlkReward \cdot \ExchgRate \cdot \frac{1 - \gamma^L}{1 - \gamma}.
-\end{align*}
+\section{Results}
 
-Suppose the attacker attacks at $\Time = 0$, cashes out from BTC to USD at
-$\Time = \TimeCashOut$, and sells the ASICs at time $\Time = \TimeSellAsics$.
-We define the discounted utility for the attacker as a function
-$\Utility(\Attack)$:
+TODO(???): include screenshots here
 
-\[
-  \Utility(\Attack) =
-  \max_{\TimeCashOut, \TimeSellAsics}
-    \left[
-        \PayoffBtc(\Attack, \alpha, \TimeCashOut)
-          \cdot \gamma^\TimeCashOut
-        + \PayoffAsic(\Attack, \alpha, \gamma, \TimeSellAsics)
-          \cdot \gamma^\TimeSellAsics
-    \right]
-\]
 
-We define the utility of attacking over mining as:
 
-\[
-  \AttackUtility = \Utility(1) - \Utility(0)
-\]
+\section{Limitations of our model}
 
-We assume that the attacker will attack if and only if $\AttackUtility$ is
-strictly positive.
+TODO(???)
+
+\section{Discussion}
+What are some other possible reasons that miners have not performed mining attacks on Bitcoin so far?
+
+TODO(Lisa)
+
+\section{Conclusion}
+
+TODO(???)
+
+\bibliographystyle{unsrt}
+\bibliography{references}
 
 \end{document}
