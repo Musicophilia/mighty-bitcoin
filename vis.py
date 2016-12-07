@@ -34,7 +34,7 @@ mining_power_step = max_mining_power/200
 # Discount Rate
 min_discount = 0.99
 max_discount = 1.0
-default_discount = 0.995
+default_discount = 0.9995
 discount_step = 0.0001
 # BTC Fraction Stolen
 min_btc_f_stolen = 0.0
